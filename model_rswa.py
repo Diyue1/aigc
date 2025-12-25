@@ -68,7 +68,9 @@ class GMLP(nn.Module):
         self.net = nn.Sequential(
             nn.Linear(dim, hidden_dim),
             nn.GELU(),
-            nn.Linear(hidden_dim, dim)
+            nn.Dropout(0.2),  # [新增] 20% 的神经元随机失活
+            nn.Linear(hidden_dim, dim),
+            nn.Dropout(0.2)   # [新增]
         )
 
     def forward(self, x):
@@ -188,6 +190,7 @@ class ResNetClassifier(nn.Module):
         self.layer4 = self._make_layer(BasicBlock, 512, 2, stride=2)
 
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.dropout = nn.Dropout(0.5)
         self.fc = nn.Linear(512, num_classes)
 
     def _make_layer(self, block, planes, blocks, stride=1):
@@ -215,6 +218,7 @@ class ResNetClassifier(nn.Module):
         x = self.layer4(x)
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
+        x = self.dropout(x)
         x = self.fc(x)
         return x
 
@@ -266,3 +270,5 @@ class AIGCDetector(nn.Module):
         logits = self.classifier(X_fused)
 
         return logits, aux_dwt['recon_loss'] + aux_fft['recon_loss']
+
+
